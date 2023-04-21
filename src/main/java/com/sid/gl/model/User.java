@@ -27,6 +27,7 @@ public class User {
     @Column(length = 60)
     private String password;
     private boolean enabled=false;
+    private boolean mfa;
     private String secret;
 
     @ManyToMany(fetch = FetchType.EAGER)
