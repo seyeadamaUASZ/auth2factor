@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import java.util.Collection;
+import java.util.HashSet;
 
 @Entity
 @Table(name="tb_user")
@@ -34,5 +35,17 @@ public class User {
     @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private Collection<Role> roles;
 
+    public User(User user) {
+        this.id = user.id;
+        this.username = user.username;
+        this.password = user.password;
+        this.roles = user.roles;
+    }
 
+    public User(String username, String password, String email) {
+        this.username = username;
+        this.password = password;
+        this.enabled = true;
+        this.roles = new HashSet<>() {{ new Role("USER"); }};
+    }
 }
