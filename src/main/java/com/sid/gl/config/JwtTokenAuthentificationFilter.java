@@ -1,14 +1,17 @@
 package com.sid.gl.config;
 
-import com.sid.gl.model.UserInfo;
+import com.sid.gl.constants.SecurityConstants;
+
 import com.sid.gl.services.impl.JwtTokenManager;
-import com.sid.gl.services.impl.UserService;
-import io.jsonwebtoken.Claims;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import com.sid.gl.services.impl.UserDetailServiceImpl;
+
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -18,69 +21,64 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Objects;
 
-@Component
 @Slf4j
+@Component
 public class JwtTokenAuthentificationFilter extends OncePerRequestFilter {
+    private final JwtTokenManager tokenProvider;
+    private final UserDetailServiceImpl userDetailsService;
 
-    private final JwtConfig jwtConfig;
-    private JwtTokenManager tokenProvider;
-    private UserService userService;
-
-    public JwtTokenAuthentificationFilter(JwtConfig jwtConfig, JwtTokenManager tokenProvider, UserService userService) {
-        this.jwtConfig = jwtConfig;
+    public JwtTokenAuthentificationFilter( JwtTokenManager tokenProvider, UserDetailServiceImpl userDetailsService) {
         this.tokenProvider = tokenProvider;
-        this.userService = userService;
+        this.userDetailsService = userDetailsService;
     }
 
-    @SneakyThrows
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
+        //final String requestURI = req.getRequestURI();
 
-        // 1. get the authentication header. Tokens are supposed to be passed in the authentication header
-        String header = request.getHeader(jwtConfig.getHeader());
+        System.out.println("entrer dans le doInternal ");
 
-        // 2. validate the header and check the prefix
-        if(header == null || !header.startsWith(jwtConfig.getPrefix())) {
-            chain.doFilter(request, response);  		// If not valid, go to the next filter.
+        final String header = req.getHeader(SecurityConstants.HEADER_STRING);
+        System.out.println("header "+header);
+
+        if(header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+            chain.doFilter(req, res);  		// If not valid, go to the next filter.
             return;
         }
 
-        // If there is no token provided and hence the user won't be authenticated.
-        // It's Ok. Maybe the user accessing a public path or asking for a token.
+        String username = null;
+        String authToken = null;
+        if (Objects.nonNull(header) && header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
 
-        // All secured paths that needs a token are already defined and secured in config class.
-        // And If user tried to access without access token, then he won't be authenticated and an exception will be thrown.
-
-        // 3. Get the token
-        String token = header.replace(jwtConfig.getPrefix(), "");
-
-        if(tokenProvider.validateToken(token)) {
-            Claims claims = tokenProvider.getClaimsFromJWT(token);
-            String username = claims.getSubject();
-
-            UsernamePasswordAuthenticationToken auth =
-                    userService.findUserByUserName(username)
-                            .map(UserInfo::new)
-                            .map(userDetails -> {
-                                UsernamePasswordAuthenticationToken authentication =
-                                        new UsernamePasswordAuthenticationToken(
-                                                userDetails, null, userDetails.getAuthorities());
-                                authentication
-                                        .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                                return authentication;
-                            })
-                            .orElse(null);
-
-            SecurityContextHolder.getContext().setAuthentication(auth);
-        } else {
-            SecurityContextHolder.clearContext();
+            authToken = header.replace(SecurityConstants.TOKEN_PREFIX, StringUtils.EMPTY);
+            try {
+                username = tokenProvider.getClaimsFromJWT(authToken).getSubject();
+                log.info("username authenticated {} ",username);
+            }
+            catch (Exception e) {
+                log.error("Authentication Exception : {}", e.getMessage());
+            }
         }
 
-        // go to the next filter in the filter chain
-        chain.doFilter(request, response);
+        final SecurityContext securityContext = SecurityContextHolder.getContext();
+
+        if (Objects.nonNull(username) && Objects.isNull(securityContext.getAuthentication())) {
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            if (tokenProvider.validateToken(authToken)) {
+
+                final UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null,userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
+                log.info("Authentication successful. Logged in username : {} ", username);
+                securityContext.setAuthentication(authentication);
+            }
+        }
+
+        chain.doFilter(req, res);
     }
+
 
 }

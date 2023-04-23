@@ -6,7 +6,8 @@ import javax.validation.constraints.Email;
 
 @Data
 public class UserRequest {
-    private String name;
+    private String lastName;
+    private String firstName;
     @Email
     private String username;
     private String password;

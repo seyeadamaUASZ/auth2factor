@@ -9,6 +9,7 @@ import com.sid.gl.exceptions.UserAlreadyExistException;
 import com.sid.gl.exceptions.UserNotFoundException;
 import com.sid.gl.model.User;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,7 +18,7 @@ public interface IUser {
     Optional<UserResponse> findByUserName(String username) throws UserNotFoundException;
     UserResponse findUserById(Long id);
     Optional<User> findUserByUserName(String username) throws UserNotFoundException;
-    User registerUser(UserRequest userRequest) throws UserAlreadyExistException;
+    User registerUser(UserRequest userRequest) throws UserAlreadyExistException, IOException;
 
     String login(LoginRequest loginRequest);
 

@@ -1,6 +1,7 @@
 package com.sid.gl.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -25,13 +26,12 @@ public class User {
 
     @Email
     private String username;
-    @Column(length = 60)
     private String password;
-    private boolean enabled=false;
+    private boolean enabled=true;
     private boolean mfa;
     private String secret;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private Collection<Role> roles;
 
@@ -42,7 +42,7 @@ public class User {
         this.roles = user.roles;
     }
 
-    public User(String username, String password, String email) {
+    public User(String username, String password) {
         this.username = username;
         this.password = password;
         this.enabled = true;

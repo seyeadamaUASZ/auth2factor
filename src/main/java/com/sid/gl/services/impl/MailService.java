@@ -22,12 +22,11 @@ public class MailService {
 
     private static final String MAILTO="a.seye3777@zig.univ.sn";
 
-    public String sendEmail(final String mailDestination) throws IOException {
+    public String sendEmail(String subject, String message,final String mailDestination) throws IOException {
         // the sender email should be the same as we used to Create a Single Sender Verification
         Email from = new Email(MAILTO);
-        String subject = "OTP envoyé";
         Email to = new Email(mailDestination);
-        Content content = new Content("text/plain", "Le code otp est ");
+        Content content = new Content("text/plain", message);
         Mail mail = new Mail(from, subject, to, content);
 
         SendGrid sg = new SendGrid(apiKey);

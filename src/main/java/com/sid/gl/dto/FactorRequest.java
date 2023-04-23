@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class FactorRequest {
     private String code;
-    private String userName;
+    private String username;
 }

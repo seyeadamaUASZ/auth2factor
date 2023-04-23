@@ -8,15 +8,17 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 public class UserInfo extends User implements UserDetails {
-    public UserInfo(final User user){
+
+    public UserInfo(final User user) {
         super(user);
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+
         return getRoles()
                 .stream()
-                .map(role ->  new SimpleGrantedAuthority("ROLE_".concat(role.getName())))
+                .map(role -> new SimpleGrantedAuthority("ROLE_" +role.getName()))
                 .collect(Collectors.toSet());
     }
 
@@ -32,6 +34,11 @@ public class UserInfo extends User implements UserDetails {
 
     @Override
     public boolean isCredentialsNonExpired() {
+        return isEnabled();
+    }
+
+    @Override
+    public boolean isEnabled() {
         return isEnabled();
     }
 }

@@ -10,7 +10,6 @@ import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.secret.SecretGenerator;
 import dev.samstevens.totp.time.SystemTimeProvider;
 import dev.samstevens.totp.time.TimeProvider;
-import dev.samstevens.totp.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -20,11 +19,9 @@ import static dev.samstevens.totp.util.Utils.getDataUriForImage;
 @Slf4j
 public class TopManagerService implements ITopManager {
 
-
     @Override
     public String generateSecret() {
-        SecretGenerator secretGenerator =
-                new DefaultSecretGenerator();
+        SecretGenerator secretGenerator = new DefaultSecretGenerator(4);
         return secretGenerator.generate();
     }
 
@@ -58,7 +55,13 @@ public class TopManagerService implements ITopManager {
         TimeProvider timeProvider =
                 new SystemTimeProvider();
         CodeGenerator codeGenerator = new DefaultCodeGenerator();
-        CodeVerifier codeVerifier = new DefaultCodeVerifier(codeGenerator,timeProvider);
+        DefaultCodeVerifier codeVerifier = new DefaultCodeVerifier(codeGenerator,timeProvider);
+        codeVerifier.setTimePeriod(300);
         return codeVerifier.isValidCode(secret,code);
+    }
+
+    @Override
+    public boolean codeVerify(String code, String secret) {
+        return code.equals(secret);
     }
 }
