@@ -118,6 +118,11 @@ public class UserService implements IUser {
           User user = userRepository.findUserByUsername(loginRequest.getUsername())
                   .orElseThrow(()->new UserNotFoundException("user not found !!!"));
           Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+          //set secret date val duration if mfa
+          if(user.isMfa()){
+               user.setDateValSecret(new Date());
+               userRepository.save(user);
+          }
           return user.isMfa() ? "" : jwtTokenManager.generateToken(authentication);
      }
 

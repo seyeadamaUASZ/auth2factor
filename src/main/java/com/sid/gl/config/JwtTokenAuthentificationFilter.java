@@ -36,12 +36,8 @@ public class JwtTokenAuthentificationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
-        //final String requestURI = req.getRequestURI();
-
-        System.out.println("entrer dans le doInternal ");
 
         final String header = req.getHeader(SecurityConstants.HEADER_STRING);
-        System.out.println("header "+header);
 
         if(header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
             chain.doFilter(req, res);  		// If not valid, go to the next filter.
