@@ -29,10 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,10 +66,9 @@ public class UserService implements IUser {
           if(optionalUser.isEmpty())
                throw new UserNotFoundException("User not found");
 
-          return Optional.of(optionalUser.get());
+          return optionalUser;
+
      }
-
-
 
      @Override
      public UserResponse findUserById(Long id) {
@@ -94,16 +90,15 @@ public class UserService implements IUser {
           Role role = roleRepository.findByName("USER")
                   .orElseThrow(()->new IllegalArgumentException("Role not found"));
 
-          user.setRoles(new HashSet<>(){{
-               add(role);
-          }});
+          Set<Role> roles = new HashSet<>();
+          roles.add(role);
+          user.setRoles(roles);
 
           if(user.isMfa()){
                user.setSecret(totpManager.generateSecret());
+               user.setDateValSecret(new Date());
           }
-
           User saved = userRepository.save(user);
-
           String message="";
           String subject="";
           if(saved.isMfa()){
@@ -120,9 +115,9 @@ public class UserService implements IUser {
      @Override
      public String login(LoginRequest loginRequest) {
           log.info("login request {} ",loginRequest.getUsername()+ " "+ loginRequest.getPassword());
-          User user = userRepository.findUserByUsername(loginRequest.getUsername()).get();
+          User user = userRepository.findUserByUsername(loginRequest.getUsername())
+                  .orElseThrow(()->new UserNotFoundException("user not found !!!"));
           Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-
           return user.isMfa() ? "" : jwtTokenManager.generateToken(authentication);
      }
 
@@ -133,8 +128,16 @@ public class UserService implements IUser {
                   .orElseThrow(()->new UsernameNotFoundException("user not found"));
 
           log.info("code extract {}", user.getSecret());
-          if(!totpManager.codeVerify(request.getCode(), user.getSecret()))
-               throw new BadRequestException("code not correct");
+          Date time = user.getDateValSecret();
+          time.setTime(time.getTime() + 2L * 60000);
+
+          //Calendar calendar = Calendar.getInstance();
+          //calendar.setTimeInMillis(date.getTime());
+          //calendar.add(Calendar.MINUTE,1);
+          //System.out.println(new Date(calendar.getTime().getTime()));
+
+          if(!totpManager.codeVerify(request.getCode(), user.getSecret(),time))
+               throw new BadRequestException("code not correct or expirated time !!!");
 
           return Optional.of(user)
                   .map(UserInfo::new)
@@ -144,6 +147,7 @@ public class UserService implements IUser {
                   .orElseThrow(() ->
                           new InternalServerException("unable to generate access token"));
      }
+
 
 
 }

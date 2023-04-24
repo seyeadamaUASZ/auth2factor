@@ -13,6 +13,8 @@ import dev.samstevens.totp.time.TimeProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+
 import static dev.samstevens.totp.util.Utils.getDataUriForImage;
 
 @Service
@@ -21,7 +23,7 @@ public class TopManagerService implements ITopManager {
 
     @Override
     public String generateSecret() {
-        SecretGenerator secretGenerator = new DefaultSecretGenerator(4);
+        SecretGenerator secretGenerator = new DefaultSecretGenerator(3);
         return secretGenerator.generate();
     }
 
@@ -61,7 +63,12 @@ public class TopManagerService implements ITopManager {
     }
 
     @Override
-    public boolean codeVerify(String code, String secret) {
-        return code.equals(secret);
+    public boolean codeVerify(String code, String secret, Date date) {
+        return (code.equals(secret) && hasExpiration(date));
     }
+
+    private boolean hasExpiration(Date date){
+        return (new Date().getTime() - date.getTime() < 0L);
+    }
+
 }

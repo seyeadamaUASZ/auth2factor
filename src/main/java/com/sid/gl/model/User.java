@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 
 @Entity
@@ -23,13 +24,14 @@ public class User {
     private String firstName;
     @Column(length = 50)
     private String lastName;
-
     @Email
     private String username;
     private String password;
     private boolean enabled=true;
     private boolean mfa;
     private String secret;
+    private Date dateValSecret;
+
 
     @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
