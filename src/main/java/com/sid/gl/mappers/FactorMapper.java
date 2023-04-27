@@ -20,8 +20,7 @@ public class FactorMapper {
     }
 
     public static List<UserResponse> builListUserResponse(List<User> users){
-        List<UserResponse> userResponses = MapUtils.buildConvertList(users, source -> convertToUserResponse(source));
-        return userResponses;
+        return MapUtils.buildConvertList(users, FactorMapper::convertToUserResponse);
     }
 
     public static  User convertToUser(UserRequest userRequest){
