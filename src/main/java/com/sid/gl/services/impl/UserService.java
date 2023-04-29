@@ -2,10 +2,7 @@ package com.sid.gl.services.impl;
 
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
-import com.sid.gl.dto.FactorRequest;
-import com.sid.gl.dto.LoginRequest;
-import com.sid.gl.dto.UserRequest;
-import com.sid.gl.dto.UserResponse;
+import com.sid.gl.dto.*;
 import com.sid.gl.exceptions.BadRequestException;
 import com.sid.gl.exceptions.InternalServerException;
 import com.sid.gl.exceptions.UserAlreadyExistException;
@@ -29,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -230,5 +228,39 @@ public class UserService implements IUser {
      @Override
      public List<UserLocation> listLocationsUser(Long id) {
           return userLocationRepository.findByUser_Id(id);
+     }
+
+     @Override
+     public String sendEmailForPassword(SendRequest request) throws IOException {
+          Optional<User> optionalUser = userRepository.findUserByUsername(request.getUsername());
+          if(optionalUser.isEmpty())
+               throw new UserNotFoundException("User not found !!");
+          User user = optionalUser.get();
+
+          String appUrl = getUriComponentBuilder("auth/resetPassword/username?="+user.getUsername()).toString();
+
+          String subject="Réinitialisation mot de passe";
+          String message="Pour réinitialiser votre mot de passe veuillez cliquer "+
+                  "\n sur le lien : \n"
+                          +appUrl;
+         mailService.sendEmail(subject,message,user.getUsername());
+         return "Success";
+     }
+
+     @Override
+     public String changeUserPassword(String username, NewPasswordRequest request) {
+          User user = userRepository.findUserByUsername(username)
+                  .orElseThrow(()->new UserNotFoundException("User not found !!!"));
+          String passH = passwordEncoder.encode(request.getPassword());
+          user.setPassword(passH);
+          //update user on new password
+          userRepository.save(user);
+          return "Password successfully updated ";
+     }
+
+     private UriComponentsBuilder getUriComponentBuilder(String path){
+          return UriComponentsBuilder
+                  .fromHttpUrl(String.format("http://localhost:9075/%s",path));
+
      }
 }

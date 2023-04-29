@@ -6,6 +6,7 @@ import com.sid.gl.model.User;
 import com.sid.gl.services.impl.DeviceService;
 import com.sid.gl.services.impl.TopManagerService;
 import com.sid.gl.services.impl.UserService;
+import com.sid.gl.validators.PasswordMatches;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -68,6 +69,15 @@ public class AuthController {
     @GetMapping("/location/{id}")
     public ResponseEntity<?> findLocationUser(@PathVariable("id")Long id){
         return  ResponseEntity.ok(userService.listLocationsUser(id));
+    }
+
+    @PostMapping("/sendMail")
+    public ResponseEntity<?> sendMailForChangePassword(@Valid @RequestBody final SendRequest request) throws IOException {
+     return ResponseEntity.ok(userService.sendEmailForPassword(request));
+    }
+   @PostMapping("changePassword/{username}")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody NewPasswordRequest request, @PathVariable("username") String username){
+          return ResponseEntity.ok(userService.changeUserPassword(username,request));
     }
 
     private String getClientIP(HttpServletRequest request) {

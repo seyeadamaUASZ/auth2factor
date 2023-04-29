@@ -1,16 +1,14 @@
 package com.sid.gl.controllers;
 
 import com.sid.gl.ApiResponse;
+import com.sid.gl.dto.SendRequest;
 import com.sid.gl.dto.UserResponse;
 import com.sid.gl.services.impl.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,7 +24,7 @@ public class UserController {
         log.info("retrieving user {}", username);
         return  userService
                 .findByUserName(username)
-                .map(user -> ResponseEntity.ok(user))
+                .map(ResponseEntity::ok)
                 .orElseThrow(() -> new UsernameNotFoundException("user with "+username+" not found"));
     }
 
@@ -37,4 +35,6 @@ public class UserController {
         apiResponse.setData(userResponses);
         return ResponseEntity.ok(apiResponse);
     }
+
+
 }

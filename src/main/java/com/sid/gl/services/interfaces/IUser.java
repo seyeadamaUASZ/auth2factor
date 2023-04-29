@@ -1,10 +1,7 @@
 package com.sid.gl.services.interfaces;
 
 import com.maxmind.geoip2.exception.GeoIp2Exception;
-import com.sid.gl.dto.FactorRequest;
-import com.sid.gl.dto.LoginRequest;
-import com.sid.gl.dto.UserRequest;
-import com.sid.gl.dto.UserResponse;
+import com.sid.gl.dto.*;
 import com.sid.gl.exceptions.BadRequestException;
 import com.sid.gl.exceptions.UserAlreadyExistException;
 import com.sid.gl.exceptions.UserNotFoundException;
@@ -32,4 +29,8 @@ public interface IUser {
     void addUserLocation(User user,String ip);
 
     List<UserLocation> listLocationsUser(Long id);
+
+    String sendEmailForPassword(SendRequest request) throws IOException;
+
+    String changeUserPassword(String username,NewPasswordRequest request);
 }

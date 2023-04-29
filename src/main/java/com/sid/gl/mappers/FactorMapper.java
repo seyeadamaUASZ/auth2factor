@@ -9,14 +9,17 @@ import org.springframework.beans.BeanUtils;
 import java.util.List;
 
 public class FactorMapper {
+
+    private FactorMapper(){
+
+    }
     public static UserResponse convertToUserResponse(User user){
-        UserResponse userResponse = UserResponse.builder()
+        return UserResponse.builder()
                 .userName(user.getUsername())
                 .name(user.getLastName().concat(" ").concat(user.getLastName()))
                 .enabled(user.isEnabled())
                 .mfa(user.isMfa())
                 .build();
-        return userResponse;
     }
 
     public static List<UserResponse> builListUserResponse(List<User> users){
