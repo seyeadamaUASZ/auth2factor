@@ -39,9 +39,8 @@ public class MailService {
             log.info(response.getBody());
             return response.getBody();
         } catch (IOException ex) {
-            ex.printStackTrace();
+           throw ex;
         }
-        return null;
     }
 
 }
