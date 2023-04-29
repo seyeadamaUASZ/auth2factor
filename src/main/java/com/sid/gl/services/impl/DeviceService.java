@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import static java.util.Objects.nonNull;
 
@@ -117,7 +118,9 @@ public class DeviceService implements IDevice {
     }
 
   private String parseXForwardedHeader(String header) {
-    return header.split(" *, *")[0];
+      Pattern p = Pattern.compile(" *, *");
+      String[] result = p.split(header);
+    return result[0];
   }
 
   private String getLocation(String ip) throws IOException,GeoIp2Exception{
