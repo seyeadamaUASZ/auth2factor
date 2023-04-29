@@ -1,7 +1,12 @@
 package com.sid.gl.repositories;
 
-import com.sid.gl.model.User;
+import com.sid.gl.model.DeviceMetadata;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface DeviceRepository extends JpaRepository<User,Long> {
+import java.util.List;
+
+public interface DeviceRepository extends JpaRepository<DeviceMetadata,Long> {
+    List<DeviceMetadata> findByUserId(Long userId);
+
 }
