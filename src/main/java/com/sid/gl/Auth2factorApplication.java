@@ -1,13 +1,11 @@
 package com.sid.gl;
 
 import com.maxmind.geoip2.DatabaseReader;
-import com.maxmind.geoip2.exception.GeoIp2Exception;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.util.ResourceUtils;
-import ua_parser.Parser;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +24,9 @@ public class Auth2factorApplication {
 
 	@Bean(name="GeoIPCountry")
 	public DatabaseReader databaseReader() throws IOException {
-		final File resource = new File("src/main/resources/maxmind/GeoLite2-Country.mmdb");
-		return new DatabaseReader.Builder(resource).build();
+		File database = ResourceUtils
+				.getFile("classpath:maxmind/GeoLite2-Country.mmdb");
+		return new DatabaseReader.Builder(database)
+				.build();
 	}
 }
