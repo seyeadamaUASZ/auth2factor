@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
         - name: auth2factor
-          image: auth2factor
+          image: adama93/auth2factor
+          imagePullPolicy: Always
           ports:
             - containerPort: 9090
           env:   # Setting Enviornmental Variables
