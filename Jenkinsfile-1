@@ -11,10 +11,25 @@ node("master") {
       bat "mvn test"
    }
 
+   stage("run package") {
+         bat "mvn clean package -P prod"
+   }
+
     stage('Scan'){
          withSonarQubeEnv(installationName:'sq1'){
               bat 'mvn clean install -DskipTests org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar -Dsonar.java.binaries=target/classes'
          }
+     }
+
+     stage('Docker Build') {
+            bat 'docker build -t adama93/auth2factor .'
+     }
+
+     stage('Docker Push') {
+         withCredentials([usernamePassword(credentialsId: '082bdb62-13e2-4e45-8435-3c987256309f', passwordVariable: 'Amadou031', usernameVariable: 'adama93')]) {
+         bat "docker login -u adama93 -p Amadou031"
+         bat 'docker push adama93/auth2factor:latest'
+      }
      }
 
 }

@@ -1,6 +1,6 @@
 package com.sid.gl.repositories;
 
-import com.google.common.base.Optional;
+
 import com.sid.gl.model.User;
 import com.sid.gl.model.UserLocation;
 import org.springframework.data.jpa.repository.JpaRepository;

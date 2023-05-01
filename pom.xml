@@ -77,17 +77,17 @@
 			<version>1.7</version>
 		</dependency>
 
-		<dependency>
+		<!--<dependency>
 			<groupId>org.togglz</groupId>
 			<artifactId>togglz-spring-boot-starter</artifactId>
 			<version>3.1.2</version>
-		</dependency>
+		</dependency>-->
 
-		<dependency>
+		<!--<dependency>
 			<groupId>org.togglz</groupId>
 			<artifactId>togglz-console</artifactId>
 			<version>3.3.3</version>
-		</dependency>
+		</dependency>-->
 
 		<!-- User Agent parser -->
 		<dependency>
@@ -139,5 +139,23 @@
 			</plugin>
 		</plugins>
 	</build>
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+				<activatedProperties>dev</activatedProperties>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>prod</id>
+			<properties>
+				<activatedProperties>prod</activatedProperties>
+			</properties>
+		</profile>
+	</profiles>
 
 </project>
