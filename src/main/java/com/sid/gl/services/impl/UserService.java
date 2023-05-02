@@ -43,24 +43,10 @@ public class UserService implements IUser {
      private final JwtTokenManager jwtTokenManager;
      private final ITopManager totpManager;
      private final MailService mailService;
-
      private final RoleRepository roleRepository;
 
      @Autowired
      private Environment env;
-
-     @Autowired
-     @Qualifier("GeoIPCountry")
-     private DatabaseReader databaseReader;
-
-     @Autowired
-     private UserLocationRepository userLocationRepository;
-
-     @Autowired
-     private NewTokenRepository newLocationTokenRepository;
-
-     @Autowired
-     private DeviceService deviceService;
 
      @Override
      public List<UserResponse> allUsers() {
@@ -139,9 +125,9 @@ public class UserService implements IUser {
                   .orElseThrow(()->new UserNotFoundException("user not found !!!"));
           Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
           //on verifie aussi la device ou ajouter un nouveau device
-          if(authentication.getPrincipal() instanceof User && isGeoIpLibEnabled()){
+          /*if(authentication.getPrincipal() instanceof User && isGeoIpLibEnabled()){
                deviceService.verifyDevice((User) authentication.getPrincipal(),request);
-          }//set secret date val duration if mfa
+          }*/
           if(user.isMfa()){
                user.setDateValSecret(new Date());
                userRepository.save(user);
@@ -172,63 +158,19 @@ public class UserService implements IUser {
 
      @Override
      public NewLocationToken isNewLocation(String username, String ip) {
-          if(isGeoIpLibEnabled()) {
-               return null;
-          }
-          try {
-               final InetAddress ipAddress = InetAddress.getByName(ip);
-               final String country = databaseReader.country(ipAddress)
-                       .getCountry()
-                       .getName();
-               log.info("country location {} ....... ",country);
-               final User user = userRepository.findUserByUsername(username)
-                       .orElseThrow(()->new UserNotFoundException("user not found !!"));
-               final UserLocation loc = userLocationRepository.findByUserAndCountry(user,country);
-               if ((loc == null) || !loc.isEnabled()) {
-                    return createNewLocationToken(country, user);
-               }
-          } catch (final Exception e) {
-               return null;
-          }
-         return null;
+          return null;
      }
 
      @Override
      public void addUserLocation(User user, String ip) {
-          if(isGeoIpLibEnabled()){
-               return ;
-          }
-          try {
-               final InetAddress ipAddress=
-                       InetAddress.getByName(ip);
-               final String country = databaseReader.country(ipAddress)
-                       .getCountry()
-                       .getName();
-               UserLocation location = new UserLocation(country,user);
-               location.setEnabled(true);
-               userLocationRepository.save(location);
-          } catch (final Exception e) {
-               throw new RuntimeException(e);
-          }
 
-     }
-
-     private boolean isGeoIpLibEnabled() {
-          return !Boolean.parseBoolean(env.getProperty("geo.ip.lib.enabled"));
-     }
-
-     private NewLocationToken createNewLocationToken(String country,User user){
-          UserLocation location = new UserLocation(country,user);
-          location = userLocationRepository.save(location);
-          final NewLocationToken token = new NewLocationToken(UUID.randomUUID()
-                  .toString(), location);
-          return newLocationTokenRepository.save(token);
      }
 
      @Override
      public List<UserLocation> listLocationsUser(Long id) {
-          return userLocationRepository.findByUser_Id(id);
+          return null;
      }
+
 
      @Override
      public String sendEmailForPassword(SendRequest request) throws IOException {
