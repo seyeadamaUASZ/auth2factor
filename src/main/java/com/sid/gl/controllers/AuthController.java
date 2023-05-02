@@ -28,7 +28,7 @@ public class AuthController {
     private final UserService userService;
     private final TopManagerService topManagerService;
 
-    private final DeviceService deviceService;
+    //private final DeviceService deviceService;
 
     @PostMapping("/login")
     public ResponseEntity<?> signin(@Valid @RequestBody final LoginRequest loginRequest, HttpServletRequest request) throws IOException, GeoIp2Exception {
@@ -48,7 +48,7 @@ public class AuthController {
         log.info("register user {}", userRequest.getUsername());
         User userSaved = userService.registerUser(userRequest);
         //and add userLocation
-        userService.addUserLocation(userSaved, getClientIP(request));
+        //userService.addUserLocation(userSaved, getClientIP(request));
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentContextPath().path("/users/{username}")
@@ -61,10 +61,10 @@ public class AuthController {
     }
 
     // for next feature flipping this feature
-    @GetMapping("/devices/{id}")
+    /*@GetMapping("/devices/{id}")
     public ResponseEntity<?> getDevicesUser(@PathVariable("id") Long id){
         return ResponseEntity.ok(deviceService.listDevicesByUser(id));
-    }
+    }*/
 
     @GetMapping("/location/{id}")
     public ResponseEntity<?> findLocationUser(@PathVariable("id")Long id){
