@@ -3,10 +3,11 @@ package com.sid.gl.controllers;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.sid.gl.dto.*;
 import com.sid.gl.model.User;
-import com.sid.gl.services.impl.DeviceService;
+import com.sid.gl.model.UserLocation;
+
 import com.sid.gl.services.impl.TopManagerService;
 import com.sid.gl.services.impl.UserService;
-import com.sid.gl.validators.PasswordMatches;
+import com.sid.gl.utils.ApiPaths;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -18,9 +19,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 
 @RestController
-@RequestMapping(value = "/auth")
+@RequestMapping(value = ApiPaths.API_VERSION+ApiPaths.API_AUTH)
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
@@ -28,16 +30,15 @@ public class AuthController {
     private final UserService userService;
     private final TopManagerService topManagerService;
 
-    //private final DeviceService deviceService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> signin(@Valid @RequestBody final LoginRequest loginRequest, HttpServletRequest request) throws IOException, GeoIp2Exception {
+    public ResponseEntity<AuthResponse> signin(@Valid @RequestBody final LoginRequest loginRequest, HttpServletRequest request) throws IOException, GeoIp2Exception {
         String token = userService.login(loginRequest,request);
         return ResponseEntity.ok(new AuthResponse(token, StringUtils.isEmpty(token)));
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<?> verify(@Valid @RequestBody final FactorRequest request){
+    public ResponseEntity<AuthResponse> verify(@Valid @RequestBody final FactorRequest request){
         String token = userService.verifyCode(request);
         return ResponseEntity.ok(new AuthResponse(token,StringUtils.isEmpty(token)));
     }
@@ -47,11 +48,10 @@ public class AuthController {
     public ResponseEntity<?> createUser(@Valid @RequestBody UserRequest userRequest,final HttpServletRequest request) throws IOException {
         log.info("register user {}", userRequest.getUsername());
         User userSaved = userService.registerUser(userRequest);
-        //and add userLocation
-        //userService.addUserLocation(userSaved, getClientIP(request));
 
         URI location = ServletUriComponentsBuilder
-                .fromCurrentContextPath().path("/users/{username}")
+                .fromCurrentContextPath().path(ApiPaths.API_VERSION
+                        +ApiPaths.API_USER+"/{username}")
                 .buildAndExpand(userSaved.getUsername()).toUri();
 
         return ResponseEntity
@@ -60,23 +60,17 @@ public class AuthController {
                         topManagerService.getUriForImage(userSaved.getSecret())));
     }
 
-    // for next feature flipping this feature
-    /*@GetMapping("/devices/{id}")
-    public ResponseEntity<?> getDevicesUser(@PathVariable("id") Long id){
-        return ResponseEntity.ok(deviceService.listDevicesByUser(id));
-    }*/
-
     @GetMapping("/location/{id}")
-    public ResponseEntity<?> findLocationUser(@PathVariable("id")Long id){
+    public ResponseEntity<List<UserLocation>> findLocationUser(@PathVariable("id")Long id){
         return  ResponseEntity.ok(userService.listLocationsUser(id));
     }
 
     @PostMapping("/sendMail")
-    public ResponseEntity<?> sendMailForChangePassword(@Valid @RequestBody final SendRequest request) throws IOException {
+    public ResponseEntity<String> sendMailForChangePassword(@Valid @RequestBody final SendRequest request) throws IOException {
      return ResponseEntity.ok(userService.sendEmailForPassword(request));
     }
-   @PostMapping("changePassword/{username}")
-    public ResponseEntity<?> changePassword(@Valid @RequestBody NewPasswordRequest request, @PathVariable("username") String username){
+   @PostMapping("/changePassword/{username}")
+    public ResponseEntity<String> changePassword(@Valid @RequestBody NewPasswordRequest request, @PathVariable("username") String username){
           return ResponseEntity.ok(userService.changeUserPassword(username,request));
     }
 
