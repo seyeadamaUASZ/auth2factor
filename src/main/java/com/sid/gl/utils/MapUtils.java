@@ -1,7 +1,7 @@
 package com.sid.gl.utils;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -16,6 +16,6 @@ public class MapUtils {
                   .filter(Objects::nonNull)
                   .collect(Collectors.toList());
         }
-        return null;
+        return Collections.emptyList();
     }
 }

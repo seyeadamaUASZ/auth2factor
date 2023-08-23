@@ -72,7 +72,7 @@ public class AuditableLogginAspect {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         applicationLog.setEndPoint(request.getServletPath());
         //check username
-        applicationLog.setUsername(SecurityHelper.loadUsername(request));
+        applicationLog.setUsername(SecurityHelper.loadUserAuthenticated(request));
         applicationLog.setOperation(request.getMethod());
         //zone id
 

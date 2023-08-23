@@ -3,24 +3,23 @@ package com.sid.gl.utils;
 import com.sid.gl.constants.SecurityConstants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
-
 import javax.servlet.http.HttpServletRequest;
 
 
 
 public interface SecurityHelper {
-    static String loadUsername(HttpServletRequest request){
+    static String loadUserAuthenticated(HttpServletRequest request){
         final String header = request.getHeader(SecurityConstants.HEADER_STRING);
-        if(header !=null && header.startsWith(SecurityConstants.TOKEN_PREFIX)){
+        if(header==null || !checkHeader(header)){
+            return null;
+        }
+        if(checkHeader(header)){
            String authToken = header.replace(SecurityConstants.TOKEN_PREFIX, StringUtils.EMPTY);
             try{
-                String userName = getClaims(authToken).getSubject();
-                return userName;
+                return getClaims(authToken).getSubject();
             }catch (Exception e){
-                throw new RuntimeException(e.getMessage());
+               throw new RuntimeException(e.getMessage());
             }
         }
         return null;
@@ -31,5 +30,8 @@ public interface SecurityHelper {
                 .setSigningKey(SecurityConstants.SECRET_KEY.getBytes())
                 .parseClaimsJws(token)
                 .getBody();
+    }
+    private static boolean checkHeader(String header){
+        return header.startsWith(SecurityConstants.TOKEN_PREFIX);
     }
 }
