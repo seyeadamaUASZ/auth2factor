@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
+//TODO add Test for controller
 @RestController
 @RequestMapping(value = ApiPaths.API_VERSION+ApiPaths.API_AUTH)
 @RequiredArgsConstructor

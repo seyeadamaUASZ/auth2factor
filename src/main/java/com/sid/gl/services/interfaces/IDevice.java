@@ -1,6 +1,7 @@
 package com.sid.gl.services.interfaces;
 
 import com.maxmind.geoip2.exception.GeoIp2Exception;
+import com.sid.gl.dto.DeviceMetadataResponse;
 import com.sid.gl.model.DeviceMetadata;
 import com.sid.gl.model.User;
 
@@ -11,6 +12,6 @@ import java.net.http.HttpRequest;
 import java.util.List;
 
 public interface IDevice {
-    List<DeviceMetadata> listDevicesByUser(Long idUser);
+    List<DeviceMetadataResponse> listDevicesByUser(Long idUser);
     void verifyDevice(User user, HttpServletRequest request) throws IOException, GeoIp2Exception;
 }

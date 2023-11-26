@@ -18,7 +18,7 @@ public interface IUser {
     List<UserResponse> allUsers();
     Optional<UserResponse> findByUserName(String username) throws UserNotFoundException;
     UserResponse findUserById(Long id);
-    Optional<User> findUserByUserName(String username) throws UserNotFoundException;
+    User findUserByUserName(String username) throws UserNotFoundException;
     User registerUser(UserRequest userRequest) throws UserAlreadyExistException, IOException;
 
     String login(LoginRequest loginRequest, HttpServletRequest request) throws IOException, GeoIp2Exception;
@@ -33,4 +33,6 @@ public interface IUser {
     String sendEmailForPassword(SendRequest request) throws IOException;
 
     String changeUserPassword(String username,NewPasswordRequest request);
+
+    List<DeviceMetadataResponse> allDevicesByUser(Long idUser);
 }

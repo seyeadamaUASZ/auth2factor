@@ -15,7 +15,6 @@ import com.sid.gl.repositories.UserLocationRepository;
 import com.sid.gl.repositories.UserRepository;
 import com.sid.gl.services.interfaces.ITopManager;
 import com.sid.gl.services.interfaces.IUser;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,37 +32,45 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.*;
 
+//TODO add test on this Service
 @Service
 @Slf4j
 public class UserService implements IUser {
-     @Autowired
-     private  BCryptPasswordEncoder passwordEncoder;
-     @Autowired
-     private  UserRepository userRepository;
-     @Autowired
-     private  AuthenticationManager authenticationManager;
-     @Autowired
-     private  JwtTokenManager jwtTokenManager;
-     @Autowired
-     private  ITopManager totpManager;
-     @Autowired
-     private  MailService mailService;
-     @Autowired
-     private RoleRepository roleRepository;
-     @Autowired
-     private DeviceService deviceService;
+     private final  BCryptPasswordEncoder passwordEncoder;
+     private final UserRepository userRepository;
+     private final  AuthenticationManager authenticationManager;
+     private final JwtTokenManager jwtTokenManager;
+     private final ITopManager totpManager;
+     private final MailService mailService;
+     private final RoleRepository roleRepository;
+     private final DeviceService deviceService;
+     private final DatabaseReader databaseReader;
+     private final Environment env;
+     private final UserLocationRepository userLocationRepository;
+     private final NewTokenRepository newTokenRepository;
 
      @Autowired
-     @Qualifier("GeoIPCountry")
-     private DatabaseReader databaseReader;
+     public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository,
+                        AuthenticationManager authenticationManager, JwtTokenManager jwtTokenManager,
+                        ITopManager totpManager, MailService mailService,
+                        RoleRepository roleRepository, DeviceService deviceService,
+                        @Qualifier("GeoIPCountry") DatabaseReader databaseReader,
+                        Environment env, UserLocationRepository userLocationRepository,
+                        NewTokenRepository newTokenRepository) {
+          this.passwordEncoder = passwordEncoder;
+          this.userRepository = userRepository;
+          this.authenticationManager = authenticationManager;
+          this.jwtTokenManager = jwtTokenManager;
+          this.totpManager = totpManager;
+          this.mailService = mailService;
+          this.roleRepository = roleRepository;
+          this.deviceService = deviceService;
+          this.databaseReader = databaseReader;
+          this.env = env;
+          this.userLocationRepository = userLocationRepository;
+          this.newTokenRepository = newTokenRepository;
+     }
 
-     @Autowired
-     private Environment env;
-     @Autowired
-     private UserLocationRepository userLocationRepository;
-
-     @Autowired
-     private NewTokenRepository newTokenRepository;
      @Override
      public List<UserResponse> allUsers() {
           return FactorMapper.builListUserResponse(userRepository.findAll());
@@ -72,19 +79,17 @@ public class UserService implements IUser {
      @Override
      public Optional<UserResponse> findByUserName(String username) throws UserNotFoundException {
           Optional<User> optionalUser = userRepository.findUserByUsername(username);
-          if(optionalUser.isEmpty())
+          if(optionalUser.isEmpty()){
+               log.error("user not found");
                throw new UserNotFoundException("User not found");
-
+          }
           return Optional.of(FactorMapper.convertToUserResponse(optionalUser.get()));
      }
 
      @Override
-     public Optional<User> findUserByUserName(String username) throws UserNotFoundException {
-          Optional<User> optionalUser = userRepository.findUserByUsername(username);
-          if(optionalUser.isEmpty())
-               throw new UserNotFoundException("User not found");
-
-          return optionalUser;
+     public User findUserByUserName(String username) throws UserNotFoundException {
+         return  userRepository.findUserByUsername(username)
+                  .orElseThrow(()->new UserNotFoundException("User not found"));
 
      }
 
@@ -144,6 +149,7 @@ public class UserService implements IUser {
           if(authentication.getPrincipal() instanceof User && isGeoIpLibEnabled()){
                deviceService.verifyDevice((User) authentication.getPrincipal(),request);
           }
+          //TODO we need to evaluate impact to add isNew location user
           if(user.isMfa()){
                user.setDateValSecret(new Date());
                userRepository.save(user);
@@ -185,14 +191,15 @@ public class UserService implements IUser {
                final String country = databaseReader.country(ipAddress)
                        .getCountry()
                        .getName();
-               System.out.println(country + "====****");
+               log.info(country + "====****");
                final User user = userRepository.findUserByUsername(username).orElseThrow(()->new UserNotFoundException("User by username not found!!!"));
                final UserLocation loc = userLocationRepository.findByUserAndCountry(user,country);
                if ((loc == null) || !loc.isEnabled()) {
                     return createNewLocationToken(country, user);
                }
           } catch (final Exception e) {
-               return null;
+               log.error("Error to create user location");
+               throw new BadRequestException("Unable to create user location token");
           }
 
           return null;
@@ -261,6 +268,12 @@ public class UserService implements IUser {
           userRepository.save(user);
           return "Password successfully updated ";
      }
+
+     @Override
+     public List<DeviceMetadataResponse> allDevicesByUser(Long idUser) {
+          return deviceService.listDevicesByUser(idUser);
+     }
+
 
      private UriComponentsBuilder getUriComponentBuilder(String path){
           return UriComponentsBuilder

@@ -3,11 +3,14 @@ package com.sid.gl.services.impl;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
+import com.sid.gl.dto.DeviceMetadataResponse;
+import com.sid.gl.mappers.FactorMapper;
 import com.sid.gl.model.DeviceMetadata;
 import com.sid.gl.model.User;
 import com.sid.gl.repositories.DeviceRepository;
 import com.sid.gl.services.interfaces.IDevice;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
@@ -23,6 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static java.util.Objects.nonNull;
@@ -48,8 +52,8 @@ public class DeviceService implements IDevice {
   }
 
   @Override
-    public List<DeviceMetadata> listDevicesByUser(Long idUser) {
-        return deviceRepository.findByUserId(idUser);
+    public List<DeviceMetadataResponse> listDevicesByUser(Long idUser) {
+        return FactorMapper.buildListDeviceResponse(deviceRepository.findByUserId(idUser)) ;
     }
 
     @Override
@@ -102,13 +106,13 @@ public class DeviceService implements IDevice {
 
   private DeviceMetadata findExistDevice(Long id, String deviceDetails, String location) {
     List<DeviceMetadata> knowDevices = deviceRepository.findByUserId(id);
-      for(DeviceMetadata deviceMetadata : knowDevices){
-       if(deviceMetadata.getDeviceDetails().equals(deviceDetails) &&
-               deviceMetadata.getLocation().equals(location)){
-         return  deviceMetadata;
-       }
-    }
-     return null;
+      Predicate<DeviceMetadata> deviceMetadataPredicate = deviceMetadata -> deviceMetadata.getDeviceDetails().equals(deviceDetails) &&
+              deviceMetadata.getLocation().equals(location);
+
+     return  CollectionUtils.emptyIfNull(knowDevices).stream()
+              .filter(deviceMetadataPredicate)
+              .findFirst()
+              .orElse(null);
   }
 
   private String extractIp(HttpServletRequest request){
