@@ -23,4 +23,12 @@ public class GeoIpCountryConfig {
         return new DatabaseReader.Builder(database)
                 .build();
     }
+
+    @Bean(name = "GeoIPCountry")
+    public DatabaseReader databaseReaderCountry() throws IOException{
+        File database = ResourceUtils
+                .getFile("classpath:maxmind/GeoLite2-Country.mmdb");
+        return new DatabaseReader.Builder(database)
+                .build();
+    }
 }

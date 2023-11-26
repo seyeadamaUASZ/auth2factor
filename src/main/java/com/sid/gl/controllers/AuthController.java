@@ -48,12 +48,13 @@ public class AuthController {
     public ResponseEntity<?> createUser(@Valid @RequestBody UserRequest userRequest,final HttpServletRequest request) throws IOException {
         log.info("register user {}", userRequest.getUsername());
         User userSaved = userService.registerUser(userRequest);
-
+        //ajouter la localisation de l'utilisateur
+        userService.addUserLocation(userSaved,getClientIP(request));
+        //for uri after register
         URI location = ServletUriComponentsBuilder
                 .fromCurrentContextPath().path(ApiPaths.API_VERSION
                         +ApiPaths.API_USER+"/{username}")
                 .buildAndExpand(userSaved.getUsername()).toUri();
-
         return ResponseEntity
                 .created(location)
                 .body(new SignupResponse(userSaved.isMfa(),

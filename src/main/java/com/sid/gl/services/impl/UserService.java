@@ -35,19 +35,35 @@ import java.util.*;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class UserService implements IUser {
-     private final BCryptPasswordEncoder passwordEncoder;
-     private final UserRepository userRepository;
-     private final AuthenticationManager authenticationManager;
-     private final JwtTokenManager jwtTokenManager;
-     private final ITopManager totpManager;
-     private final MailService mailService;
-     private final RoleRepository roleRepository;
+     @Autowired
+     private  BCryptPasswordEncoder passwordEncoder;
+     @Autowired
+     private  UserRepository userRepository;
+     @Autowired
+     private  AuthenticationManager authenticationManager;
+     @Autowired
+     private  JwtTokenManager jwtTokenManager;
+     @Autowired
+     private  ITopManager totpManager;
+     @Autowired
+     private  MailService mailService;
+     @Autowired
+     private RoleRepository roleRepository;
+     @Autowired
+     private DeviceService deviceService;
+
+     @Autowired
+     @Qualifier("GeoIPCountry")
+     private DatabaseReader databaseReader;
 
      @Autowired
      private Environment env;
+     @Autowired
+     private UserLocationRepository userLocationRepository;
 
+     @Autowired
+     private NewTokenRepository newTokenRepository;
      @Override
      public List<UserResponse> allUsers() {
           return FactorMapper.builListUserResponse(userRepository.findAll());
@@ -125,15 +141,17 @@ public class UserService implements IUser {
                   .orElseThrow(()->new UserNotFoundException("user not found !!!"));
           Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
           //on verifie aussi la device ou ajouter un nouveau device
-          /*if(authentication.getPrincipal() instanceof User && isGeoIpLibEnabled()){
+          if(authentication.getPrincipal() instanceof User && isGeoIpLibEnabled()){
                deviceService.verifyDevice((User) authentication.getPrincipal(),request);
-          }*/
+          }
           if(user.isMfa()){
                user.setDateValSecret(new Date());
                userRepository.save(user);
           }
           return user.isMfa() ? "" : jwtTokenManager.generateToken(authentication);
      }
+
+
 
      @Override
      public String verifyCode(FactorRequest request) throws BadRequestException {
@@ -156,19 +174,63 @@ public class UserService implements IUser {
                           new InternalServerException("unable to generate access token"));
      }
 
+     //pour une nouvelle localisation en ajoutant le token selon la localisation
      @Override
      public NewLocationToken isNewLocation(String username, String ip) {
+          if(!isGeoIpLibEnabled()) {
+               return null;
+          }
+          try {
+               final InetAddress ipAddress = InetAddress.getByName(ip);
+               final String country = databaseReader.country(ipAddress)
+                       .getCountry()
+                       .getName();
+               System.out.println(country + "====****");
+               final User user = userRepository.findUserByUsername(username).orElseThrow(()->new UserNotFoundException("User by username not found!!!"));
+               final UserLocation loc = userLocationRepository.findByUserAndCountry(user,country);
+               if ((loc == null) || !loc.isEnabled()) {
+                    return createNewLocationToken(country, user);
+               }
+          } catch (final Exception e) {
+               return null;
+          }
+
           return null;
      }
 
+
+     private NewLocationToken createNewLocationToken(String country, User user) {
+          UserLocation loc = new UserLocation(country, user);
+          loc = userLocationRepository.save(loc);
+
+          final NewLocationToken token = new NewLocationToken(UUID.randomUUID()
+                  .toString(), loc);
+          return newTokenRepository.save(token);
+     }
+
+     //ajouter l'utilisateur sur une localisation donnée
      @Override
      public void addUserLocation(User user, String ip) {
+          if(!isGeoIpLibEnabled()) {
+               return;
+          }
+          try {
+               final InetAddress ipAddress = InetAddress.getByName(ip);
+               final String country = databaseReader.country(ipAddress)
+                       .getCountry()
+                       .getName();
+               UserLocation loc = new UserLocation(country, user);
+               loc.setEnabled(true);
+               userLocationRepository.save(loc);
+          } catch (final Exception e) {
+               throw new RuntimeException(e);
+          }
 
      }
 
      @Override
      public List<UserLocation> listLocationsUser(Long id) {
-          return null;
+          return userLocationRepository.findByUser_Id(id);
      }
 
 
@@ -204,5 +266,9 @@ public class UserService implements IUser {
           return UriComponentsBuilder
                   .fromHttpUrl(String.format("http://localhost:9075/%s",path));
 
+     }
+
+     private boolean isGeoIpLibEnabled() {
+          return Boolean.parseBoolean(env.getProperty("geo.ip.lib.enabled"));
      }
 }
