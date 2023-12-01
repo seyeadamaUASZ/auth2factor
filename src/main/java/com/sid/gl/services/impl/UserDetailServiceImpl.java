@@ -29,9 +29,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
     @Override
     @SneakyThrows
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        com.sid.gl.model.User user = userService.findUserByUserName(username)
-                .orElseThrow(()->new UsernameNotFoundException("user not found"));
-
+        com.sid.gl.model.User user = userService.findUserByUserName(username);
         final Collection<GrantedAuthority> grantedAuthorities= user.getRoles()
                 .stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_".concat(role.getName())))
