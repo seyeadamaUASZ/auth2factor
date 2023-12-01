@@ -3,6 +3,7 @@ package com.sid.gl.config.aspect;
 import com.sid.gl.model.ApplicationLog;
 import com.sid.gl.services.impl.ApplicationLogService;
 import com.sid.gl.utils.SecurityHelper;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -14,11 +15,11 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
+
+import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -60,7 +61,7 @@ public class AuditableLogginAspect {
         applicationLog.setMethod(className + "."+methodName+"()");
         Object[] args = point.getArgs();
 
-        LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
+        DefaultParameterNameDiscoverer u = new DefaultParameterNameDiscoverer();
         String[] paramNames = u.getParameterNames(method);
         if (args != null && paramNames != null) {
             String params = "";

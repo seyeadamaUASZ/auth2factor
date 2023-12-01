@@ -3,10 +3,8 @@ package com.sid.gl.utils;
 import com.sid.gl.constants.SecurityConstants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
-import javax.servlet.http.HttpServletRequest;
-
-
 
 public interface SecurityHelper {
     static String loadUserAuthenticated(HttpServletRequest request){

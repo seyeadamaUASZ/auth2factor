@@ -1,8 +1,8 @@
 package com.sid.gl.dto;
 
+import jakarta.validation.constraints.Email;
 import lombok.Data;
 
-import javax.validation.constraints.Email;
 
 @Data
 public class UserRequest {

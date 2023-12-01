@@ -8,6 +8,8 @@ import com.sid.gl.model.UserLocation;
 import com.sid.gl.services.impl.TopManagerService;
 import com.sid.gl.services.impl.UserService;
 import com.sid.gl.utils.ApiPaths;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -15,8 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
@@ -50,7 +50,7 @@ public class AuthController {
         log.info("register user {}", userRequest.getUsername());
         User userSaved = userService.registerUser(userRequest);
         //ajouter la localisation de l'utilisateur
-        userService.addUserLocation(userSaved,getClientIP(request));
+        userService.addUserLocation(userSaved,request);
         //for uri after register
         URI location = ServletUriComponentsBuilder
                 .fromCurrentContextPath().path(ApiPaths.API_VERSION
@@ -76,11 +76,11 @@ public class AuthController {
           return ResponseEntity.ok(userService.changeUserPassword(username,request));
     }
 
-    private String getClientIP(HttpServletRequest request) {
+    /*private String getClientIP(HttpServletRequest request) {
         final String xfHeader = request.getHeader("X-Forwarded-For");
         if (xfHeader == null || xfHeader.isEmpty() || !xfHeader.contains(request.getRemoteAddr())) {
             return request.getRemoteAddr();
         }
         return xfHeader.split(",")[0];
-    }
+    }*/
 }

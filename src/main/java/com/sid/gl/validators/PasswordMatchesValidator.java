@@ -1,9 +1,9 @@
 package com.sid.gl.validators;
 
 import com.sid.gl.dto.NewPasswordRequest;
-
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+;
 
 public class PasswordMatchesValidator implements ConstraintValidator<PasswordMatches, Object> {
     @Override

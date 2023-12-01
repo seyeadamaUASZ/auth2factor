@@ -15,6 +15,7 @@ import com.sid.gl.repositories.UserLocationRepository;
 import com.sid.gl.repositories.UserRepository;
 import com.sid.gl.services.interfaces.ITopManager;
 import com.sid.gl.services.interfaces.IUser;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,7 +28,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.*;
@@ -150,6 +151,9 @@ public class UserService implements IUser {
                deviceService.verifyDevice((User) authentication.getPrincipal(),request);
           }
           //TODO we need to evaluate impact to add isNew location user
+
+          isNewLocation(user.getUsername(),getClientIP(request));
+
           if(user.isMfa()){
                user.setDateValSecret(new Date());
                userRepository.save(user);
@@ -217,11 +221,12 @@ public class UserService implements IUser {
 
      //ajouter l'utilisateur sur une localisation donnée
      @Override
-     public void addUserLocation(User user, String ip) {
+     public void addUserLocation(User user,HttpServletRequest request) {
           if(!isGeoIpLibEnabled()) {
                return;
           }
           try {
+               String ip = getClientIP(request);
                final InetAddress ipAddress = InetAddress.getByName(ip);
                final String country = databaseReader.country(ipAddress)
                        .getCountry()
@@ -283,5 +288,13 @@ public class UserService implements IUser {
 
      private boolean isGeoIpLibEnabled() {
           return Boolean.parseBoolean(env.getProperty("geo.ip.lib.enabled"));
+     }
+
+     private String getClientIP(HttpServletRequest request) {
+          final String xfHeader = request.getHeader("X-Forwarded-For");
+          if (xfHeader == null || xfHeader.isEmpty() || !xfHeader.contains(request.getRemoteAddr())) {
+               return request.getRemoteAddr();
+          }
+          return xfHeader.split(",")[0];
      }
 }

@@ -9,6 +9,7 @@ import com.sid.gl.model.DeviceMetadata;
 import com.sid.gl.model.User;
 import com.sid.gl.repositories.DeviceRepository;
 import com.sid.gl.services.interfaces.IDevice;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Component;
 import ua_parser.Client;
 import ua_parser.Parser;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Date;
