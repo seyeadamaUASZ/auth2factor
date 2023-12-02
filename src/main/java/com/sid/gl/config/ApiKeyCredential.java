@@ -7,4 +7,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("adama")
 public class ApiKeyCredential {
     private String apikey;
+    private String email;
 }

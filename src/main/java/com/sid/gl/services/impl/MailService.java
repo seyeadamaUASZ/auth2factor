@@ -21,12 +21,11 @@ import java.io.IOException;
 public class MailService {
 
     private final ApiKeyCredential credential;
-    private static final String MAILTO="a.seye3777@zig.univ.sn";
 
     public String sendEmail(String subject, String message,final String mailDestination) throws IOException {
         // the sender email should be the same as we used to Create a Single Sender Verification
         log.info("credential apikey "+credential.getApikey());
-        Email from = new Email(MAILTO);
+        Email from = new Email(credential.getEmail());
         Email to = new Email(mailDestination);
         Content content = new Content("text/plain", message);
         Mail mail = new Mail(from, subject, to, content);
