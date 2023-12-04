@@ -1,6 +1,7 @@
 package com.sid.gl.services.impl;
 
 import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.exception.AddressNotFoundException;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.sid.gl.dto.*;
 import com.sid.gl.exceptions.BadRequestException;
@@ -17,6 +18,7 @@ import com.sid.gl.services.interfaces.ITopManager;
 import com.sid.gl.services.interfaces.IUser;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
@@ -147,8 +149,8 @@ public class UserService implements IUser {
                   .orElseThrow(()->new UserNotFoundException("user not found !!!"));
           Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
           //on verifie aussi la device ou ajouter un nouveau device
-          if(authentication.getPrincipal() instanceof User && isGeoIpLibEnabled()){
-               deviceService.verifyDevice((User) authentication.getPrincipal(),request);
+          if(isGeoIpLibEnabled()){
+               deviceService.verifyDevice(user,request);
           }
           //TODO we need to evaluate impact to add isNew location user
 
@@ -187,16 +189,23 @@ public class UserService implements IUser {
      //pour une nouvelle localisation en ajoutant le token selon la localisation
      @Override
      public NewLocationToken isNewLocation(String username, String ip) {
+          String country;
           if(!isGeoIpLibEnabled()) {
                return null;
           }
           try {
                final InetAddress ipAddress = InetAddress.getByName(ip);
-               final String country = databaseReader.country(ipAddress)
-                       .getCountry()
-                       .getName();
-               log.info(country + "====****");
+               try{
+                     country = databaseReader.country(ipAddress)
+                            .getCountry()
+                            .getName();
+               }catch (AddressNotFoundException e){
+                    log.error("IP Not found on database");
+                    country="UNKNOWN";
+               }
+
                final User user = userRepository.findUserByUsername(username).orElseThrow(()->new UserNotFoundException("User by username not found!!!"));
+               log.info("user "+user.getUsername());
                final UserLocation loc = userLocationRepository.findByUserAndCountry(user,country);
                if ((loc == null) || !loc.isEnabled()) {
                     return createNewLocationToken(country, user);

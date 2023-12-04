@@ -1,6 +1,7 @@
 package com.sid.gl.services.impl;
 
 import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.exception.AddressNotFoundException;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
 import com.sid.gl.dto.DeviceMetadataResponse;
@@ -61,6 +62,7 @@ public class DeviceService implements IDevice {
         String ip = extractIp(request);
         String location = getLocation(ip);
         String deviceDetails = getDeviceDetails(request.getHeader("user-agent"));
+        log.info("deviceDetails "+deviceDetails);
 
         DeviceMetadata existingDevice = findExistDevice(user.getId(),deviceDetails,location);
 
@@ -128,16 +130,20 @@ public class DeviceService implements IDevice {
   }
 
   private String getLocation(String ip) throws IOException,GeoIp2Exception{
-      String location = UNKNOWN;
+      String location = "";
       InetAddress ipAddress= InetAddress.getByName(ip);
-    CityResponse cityResponse = databaseReader.city(ipAddress);
-    if(nonNull(cityResponse) &&
-      nonNull(cityResponse.getCity()) &&
-            StringUtils.isNotEmpty(cityResponse.getCity().getName())
-    ){
-      location = cityResponse.getCity().getName();
-    }
-    return location;
+      try{
+          CityResponse cityResponse = databaseReader.city(ipAddress);
+          if(nonNull(cityResponse) && nonNull(cityResponse.getCity()) && StringUtils.isNotEmpty(cityResponse.getCity().getName())
+          ){
+              location = cityResponse.getCity().getName();
+              log.info("location : {} ",location);
+          }
+      }catch (AddressNotFoundException e){
+          log.error("Ip Address not found ");
+          location = "UNKNOWN";
+      }
+      return location;
   }
 
   //les details du device

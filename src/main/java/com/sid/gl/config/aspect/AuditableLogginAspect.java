@@ -84,10 +84,10 @@ public class AuditableLogginAspect {
 
     }
 
-    @Before("execution(* com.sid.gl.repositories.*.*(..))")
+   /* @Before("execution(* com.sid.gl.repositories.*.*(..))")
     public void logMethodCall(JoinPoint jp) {
         String methodName = jp.getSignature().getName();
         log.info("Before " + methodName);
-    }
+    }*/
 
 }
