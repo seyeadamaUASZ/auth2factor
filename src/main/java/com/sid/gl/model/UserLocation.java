@@ -1,7 +1,7 @@
 package com.sid.gl.model;
 
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name="tb_user_location")
@@ -10,7 +10,7 @@ public class UserLocation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String country;
-    private boolean enabled;
+    private boolean enabled=true;
 
     @ManyToOne(targetEntity = User.class, fetch = FetchType.EAGER)
     @JoinColumn(nullable = false, name = "user_id")

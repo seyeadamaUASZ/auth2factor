@@ -7,6 +7,8 @@ import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
 import com.sendgrid.SendGrid;
+import com.sid.gl.config.ApiKeyCredential;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,21 +17,20 @@ import java.io.IOException;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class MailService {
 
-    @Value("${mail.api.key}")
-    private String apiKey;
-
-    private static final String MAILTO="a.seye3777@zig.univ.sn";
+    private final ApiKeyCredential credential;
 
     public String sendEmail(String subject, String message,final String mailDestination) throws IOException {
         // the sender email should be the same as we used to Create a Single Sender Verification
-        Email from = new Email(MAILTO);
+        log.info("credential apikey "+credential.getApikey());
+        Email from = new Email(credential.getEmail());
         Email to = new Email(mailDestination);
         Content content = new Content("text/plain", message);
         Mail mail = new Mail(from, subject, to, content);
 
-        SendGrid sg = new SendGrid(apiKey);
+        SendGrid sg = new SendGrid(credential.getApikey());
         Request request = new Request();
         try {
             request.setMethod(Method.POST);

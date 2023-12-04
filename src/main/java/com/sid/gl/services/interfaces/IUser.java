@@ -8,8 +8,8 @@ import com.sid.gl.exceptions.UserNotFoundException;
 import com.sid.gl.model.NewLocationToken;
 import com.sid.gl.model.User;
 import com.sid.gl.model.UserLocation;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +26,7 @@ public interface IUser {
     String verifyCode(FactorRequest request) throws BadRequestException;
 
     NewLocationToken isNewLocation(String username,String ip);
-    void addUserLocation(User user,String ip);
+    void addUserLocation(User user,HttpServletRequest request);
 
     List<UserLocation> listLocationsUser(Long id);
 

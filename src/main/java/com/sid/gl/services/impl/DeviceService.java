@@ -1,6 +1,7 @@
 package com.sid.gl.services.impl;
 
 import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.exception.AddressNotFoundException;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
 import com.sid.gl.dto.DeviceMetadataResponse;
@@ -9,6 +10,7 @@ import com.sid.gl.model.DeviceMetadata;
 import com.sid.gl.model.User;
 import com.sid.gl.repositories.DeviceRepository;
 import com.sid.gl.services.interfaces.IDevice;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +21,6 @@ import org.springframework.stereotype.Component;
 import ua_parser.Client;
 import ua_parser.Parser;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Date;
@@ -61,6 +62,7 @@ public class DeviceService implements IDevice {
         String ip = extractIp(request);
         String location = getLocation(ip);
         String deviceDetails = getDeviceDetails(request.getHeader("user-agent"));
+        log.info("deviceDetails "+deviceDetails);
 
         DeviceMetadata existingDevice = findExistDevice(user.getId(),deviceDetails,location);
 
@@ -128,16 +130,20 @@ public class DeviceService implements IDevice {
   }
 
   private String getLocation(String ip) throws IOException,GeoIp2Exception{
-      String location = UNKNOWN;
+      String location = "";
       InetAddress ipAddress= InetAddress.getByName(ip);
-    CityResponse cityResponse = databaseReader.city(ipAddress);
-    if(nonNull(cityResponse) &&
-      nonNull(cityResponse.getCity()) &&
-            StringUtils.isNotEmpty(cityResponse.getCity().getName())
-    ){
-      location = cityResponse.getCity().getName();
-    }
-    return location;
+      try{
+          CityResponse cityResponse = databaseReader.city(ipAddress);
+          if(nonNull(cityResponse) && nonNull(cityResponse.getCity()) && StringUtils.isNotEmpty(cityResponse.getCity().getName())
+          ){
+              location = cityResponse.getCity().getName();
+              log.info("location : {} ",location);
+          }
+      }catch (AddressNotFoundException e){
+          log.error("Ip Address not found ");
+          location = "UNKNOWN";
+      }
+      return location;
   }
 
   //les details du device

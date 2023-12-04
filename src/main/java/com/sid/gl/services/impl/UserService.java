@@ -1,6 +1,7 @@
 package com.sid.gl.services.impl;
 
 import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.exception.AddressNotFoundException;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.sid.gl.dto.*;
 import com.sid.gl.exceptions.BadRequestException;
@@ -15,7 +16,9 @@ import com.sid.gl.repositories.UserLocationRepository;
 import com.sid.gl.repositories.UserRepository;
 import com.sid.gl.services.interfaces.ITopManager;
 import com.sid.gl.services.interfaces.IUser;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
@@ -27,7 +30,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.*;
@@ -146,10 +149,13 @@ public class UserService implements IUser {
                   .orElseThrow(()->new UserNotFoundException("user not found !!!"));
           Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
           //on verifie aussi la device ou ajouter un nouveau device
-          if(authentication.getPrincipal() instanceof User && isGeoIpLibEnabled()){
-               deviceService.verifyDevice((User) authentication.getPrincipal(),request);
+          if(isGeoIpLibEnabled()){
+               deviceService.verifyDevice(user,request);
           }
           //TODO we need to evaluate impact to add isNew location user
+
+          isNewLocation(user.getUsername(),getClientIP(request));
+
           if(user.isMfa()){
                user.setDateValSecret(new Date());
                userRepository.save(user);
@@ -183,16 +189,23 @@ public class UserService implements IUser {
      //pour une nouvelle localisation en ajoutant le token selon la localisation
      @Override
      public NewLocationToken isNewLocation(String username, String ip) {
+          String country;
           if(!isGeoIpLibEnabled()) {
                return null;
           }
           try {
                final InetAddress ipAddress = InetAddress.getByName(ip);
-               final String country = databaseReader.country(ipAddress)
-                       .getCountry()
-                       .getName();
-               log.info(country + "====****");
+               try{
+                     country = databaseReader.country(ipAddress)
+                            .getCountry()
+                            .getName();
+               }catch (AddressNotFoundException e){
+                    log.error("IP Not found on database");
+                    country="UNKNOWN";
+               }
+
                final User user = userRepository.findUserByUsername(username).orElseThrow(()->new UserNotFoundException("User by username not found!!!"));
+               log.info("user "+user.getUsername());
                final UserLocation loc = userLocationRepository.findByUserAndCountry(user,country);
                if ((loc == null) || !loc.isEnabled()) {
                     return createNewLocationToken(country, user);
@@ -217,11 +230,12 @@ public class UserService implements IUser {
 
      //ajouter l'utilisateur sur une localisation donnée
      @Override
-     public void addUserLocation(User user, String ip) {
+     public void addUserLocation(User user,HttpServletRequest request) {
           if(!isGeoIpLibEnabled()) {
                return;
           }
           try {
+               String ip = getClientIP(request);
                final InetAddress ipAddress = InetAddress.getByName(ip);
                final String country = databaseReader.country(ipAddress)
                        .getCountry()
@@ -283,5 +297,13 @@ public class UserService implements IUser {
 
      private boolean isGeoIpLibEnabled() {
           return Boolean.parseBoolean(env.getProperty("geo.ip.lib.enabled"));
+     }
+
+     private String getClientIP(HttpServletRequest request) {
+          final String xfHeader = request.getHeader("X-Forwarded-For");
+          if (xfHeader == null || xfHeader.isEmpty() || !xfHeader.contains(request.getRemoteAddr())) {
+               return request.getRemoteAddr();
+          }
+          return xfHeader.split(",")[0];
      }
 }

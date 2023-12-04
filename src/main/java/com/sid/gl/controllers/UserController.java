@@ -38,7 +38,6 @@ public class UserController {
 
     }
 
-
     @Auditable("load all users")
     @GetMapping
     public ResponseEntity<ApiResponse> allUsers(){

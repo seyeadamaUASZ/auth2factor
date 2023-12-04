@@ -1,14 +1,34 @@
 package com.sid.gl.model;
 
-import javax.persistence.*;
+
+import jakarta.persistence.*;
 
 @Entity
 public class NewLocationToken {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-
     private String token;
+
+    private boolean expired=false;
+
+    private boolean revoked=false;
+
+    public boolean isRevoked() {
+        return revoked;
+    }
+
+    public void setRevoked(boolean revoked) {
+        this.revoked = revoked;
+    }
+
+    public boolean isExpired() {
+        return expired;
+    }
+
+    public void setExpired(boolean expired) {
+        this.expired = expired;
+    }
 
     @OneToOne(targetEntity = UserLocation.class, fetch = FetchType.EAGER)
     @JoinColumn(nullable = false, name = "user_location_id")
