@@ -24,7 +24,7 @@ import java.util.List;
 
 //TODO add Test for controller
 @RestController
-@RequestMapping(value = "/api/v1/auth/")
+@RequestMapping(value = ApiPaths.API_VERSION+"/auth/")
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
