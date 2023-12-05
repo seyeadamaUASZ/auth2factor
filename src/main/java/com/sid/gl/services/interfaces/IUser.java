@@ -4,7 +4,7 @@ import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.sid.gl.dto.*;
 import com.sid.gl.exceptions.BadRequestException;
 import com.sid.gl.exceptions.UserAlreadyExistException;
-import com.sid.gl.exceptions.UserNotFoundException;
+import com.sid.gl.exceptions.Auth2factorNotFoundException;
 import com.sid.gl.model.NewLocationToken;
 import com.sid.gl.model.User;
 import com.sid.gl.model.UserLocation;
@@ -16,9 +16,9 @@ import java.util.Optional;
 
 public interface IUser {
     List<UserResponse> allUsers();
-    Optional<UserResponse> findByUserName(String username) throws UserNotFoundException;
+    Optional<UserResponse> findByUserName(String username) throws Auth2factorNotFoundException;
     UserResponse findUserById(Long id);
-    User findUserByUserName(String username) throws UserNotFoundException;
+    User findUserByUserName(String username) throws Auth2factorNotFoundException;
     User registerUser(UserRequest userRequest) throws UserAlreadyExistException, IOException;
 
     String login(LoginRequest loginRequest, HttpServletRequest request) throws IOException, GeoIp2Exception;
