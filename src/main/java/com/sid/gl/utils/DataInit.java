@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
-@Component
+//@Component
 @RequiredArgsConstructor
 public class DataInit implements ApplicationListener<ContextRefreshedEvent> {
     private boolean alReadySetup =false;

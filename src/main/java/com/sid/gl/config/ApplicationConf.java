@@ -51,6 +51,12 @@ public class ApplicationConf implements WebMvcConfigurer {
         return sessionLocaleResolver;
     }
 
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedMethods("GET", "PUT", "POST", "PATCH", "DELETE", "OPTIONS");
+    }
+
     public ApplicationConf() {
     }
 
