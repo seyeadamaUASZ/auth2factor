@@ -25,7 +25,7 @@ pipeline {
 
 		stage('audit sonar'){
 		    steps{
-		     withSonarQubeEnv(installationName:'sonarqube secret key'){
+		     withSonarQubeEnv(installationName:'sonarr'){
                  bat 'mvn clean install -DskipTests org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar -Dsonar.java.binaries=target/classes'
                }
 		    }
