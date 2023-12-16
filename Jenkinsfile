@@ -23,12 +23,12 @@ pipeline {
 			}
 		}
 
-		stage('audit sonar'){
-		    steps{
-		     withSonarQubeEnv(installationName:'sonarr'){
-                 bat 'mvn clean install -DskipTests org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar -Dsonar.java.binaries=target/classes'
-               }
-		    }
+		stage('sonar quality'){
+		steps {
+		   withSonarQubeEnv(installationName:'sonarqube'){
+                   bat 'mvn clean install -DskipTests org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar -Dsonar.java.binaries=target/classes'
+           }
+		}
 		}
 
 		stage('Deploy jar to nexus repo') {
