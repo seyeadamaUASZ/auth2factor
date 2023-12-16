@@ -25,6 +25,13 @@ public class MailService {
     public String sendEmail(String subject, String message,final String mailDestination) throws IOException {
         // the sender email should be the same as we used to Create a Single Sender Verification
         log.info("credential apikey "+credential.getApikey());
+        if(credential.getEmail() ==null){
+            credential.setEmail("a.seye3777@zig.univ.sn");
+
+        }
+        if(credential.getApikey() ==null){
+            credential.setApikey("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\n");
+        }
         Email from = new Email(credential.getEmail());
         Email to = new Email(mailDestination);
         Content content = new Content("text/plain", message);
@@ -40,6 +47,7 @@ public class MailService {
             log.info(response.getBody());
             return response.getBody();
         } catch (IOException ex) {
+            log.error("error sending mail with sendgrid");
            throw ex;
         }
     }

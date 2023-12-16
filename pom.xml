@@ -13,6 +13,16 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>auth2factor</name>
 	<description>Demo project for Spring Boot</description>
+
+	<distributionManagement>
+		<repository>
+			<uniqueVersion>false</uniqueVersion>
+			<id>nexus-release</id>
+			<name>nexus-release</name>
+			<url>http://localhost:8081/repository/nexus-release/</url>
+		</repository>
+	</distributionManagement>
+
 	<properties>
 		<java.version>17</java.version>
 	</properties>

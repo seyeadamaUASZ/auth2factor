@@ -7,7 +7,7 @@ import com.sid.gl.dto.*;
 import com.sid.gl.exceptions.BadRequestException;
 import com.sid.gl.exceptions.InternalServerException;
 import com.sid.gl.exceptions.UserAlreadyExistException;
-import com.sid.gl.exceptions.UserNotFoundException;
+import com.sid.gl.exceptions.Auth2factorNotFoundException;
 import com.sid.gl.mappers.FactorMapper;
 import com.sid.gl.model.*;
 import com.sid.gl.repositories.NewTokenRepository;
@@ -18,7 +18,6 @@ import com.sid.gl.services.interfaces.ITopManager;
 import com.sid.gl.services.interfaces.IUser;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
@@ -80,19 +79,19 @@ public class UserService implements IUser {
      }
 
      @Override
-     public Optional<UserResponse> findByUserName(String username) throws UserNotFoundException {
+     public Optional<UserResponse> findByUserName(String username) throws Auth2factorNotFoundException {
           Optional<User> optionalUser = userRepository.findUserByUsername(username);
           if(optionalUser.isEmpty()){
                log.error("user not found");
-               throw new UserNotFoundException("User not found");
+               throw new Auth2factorNotFoundException("User not found");
           }
           return Optional.of(FactorMapper.convertToUserResponse(optionalUser.get()));
      }
 
      @Override
-     public User findUserByUserName(String username) throws UserNotFoundException {
+     public User findUserByUserName(String username) throws Auth2factorNotFoundException {
          return  userRepository.findUserByUsername(username)
-                  .orElseThrow(()->new UserNotFoundException("User not found"));
+                  .orElseThrow(()->new Auth2factorNotFoundException("User not found"));
 
      }
 
@@ -146,7 +145,7 @@ public class UserService implements IUser {
      public String login(LoginRequest loginRequest, HttpServletRequest request) throws IOException, GeoIp2Exception {
           log.info("login request {} ",loginRequest.getUsername()+ " "+ loginRequest.getPassword());
           User user = userRepository.findUserByUsername(loginRequest.getUsername())
-                  .orElseThrow(()->new UserNotFoundException("user not found !!!"));
+                  .orElseThrow(()->new Auth2factorNotFoundException("user not found !!!"));
           Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
           //on verifie aussi la device ou ajouter un nouveau device
           if(isGeoIpLibEnabled()){
@@ -204,7 +203,7 @@ public class UserService implements IUser {
                     country="UNKNOWN";
                }
 
-               final User user = userRepository.findUserByUsername(username).orElseThrow(()->new UserNotFoundException("User by username not found!!!"));
+               final User user = userRepository.findUserByUsername(username).orElseThrow(()->new Auth2factorNotFoundException("User by username not found!!!"));
                log.info("user "+user.getUsername());
                final UserLocation loc = userLocationRepository.findByUserAndCountry(user,country);
                if ((loc == null) || !loc.isEnabled()) {
@@ -259,7 +258,7 @@ public class UserService implements IUser {
      public String sendEmailForPassword(SendRequest request) throws IOException {
           Optional<User> optionalUser = userRepository.findUserByUsername(request.getUsername());
           if(optionalUser.isEmpty())
-               throw new UserNotFoundException("User not found !!");
+               throw new Auth2factorNotFoundException("User not found !!");
           User user = optionalUser.get();
 
           String appUrl = getUriComponentBuilder("auth/resetPassword/username?="+user.getUsername()).toString();
@@ -275,7 +274,7 @@ public class UserService implements IUser {
      @Override
      public String changeUserPassword(String username, NewPasswordRequest request) {
           User user = userRepository.findUserByUsername(username)
-                  .orElseThrow(()->new UserNotFoundException("User not found !!!"));
+                  .orElseThrow(()->new Auth2factorNotFoundException("User not found !!!"));
           String passH = passwordEncoder.encode(request.getPassword());
           user.setPassword(passH);
           //update user on new password
