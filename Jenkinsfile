@@ -23,7 +23,7 @@ pipeline {
 			}
 		}
 
-		stage('audit sonar'){
+		stage('sonar quality'){
 		steps {
 		   withSonarQubeEnv(installationName:'sonarqube'){
                    bat 'mvn clean install -DskipTests org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar -Dsonar.java.binaries=target/classes'
