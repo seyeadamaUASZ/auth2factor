@@ -23,7 +23,15 @@ pipeline {
 			}
 		}
 
-		stage('Deploy') {
+		stage('audit sonar'){
+		    steps{
+		     withSonarQubeEnv(installationName:'sonarqube secret key'){
+                 bat 'mvn clean install -DskipTests org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar -Dsonar.java.binaries=target/classes'
+               }
+		    }
+		}
+
+		stage('Deploy jar to nexus repo') {
 			steps {
 			    bat "mvn jar:jar deploy:deploy"
 			}
